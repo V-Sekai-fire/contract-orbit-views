@@ -11,6 +11,7 @@ A orbit-view bundle is three files sharing one stem:
 | `<stem>.png` or `<stem>.mkv` | the still sheet, or the clip |
 | `<stem>.cff` | its citation: what it shows, from which commit, under which release |
 | `<stem>.tsv` | one row per cell: the feature, its forecast, the view, and the cell's metric |
+| `<stem>.chart.tsv` | where the color chart sits in a still sheet: one `x y w h` row in pixels |
 
 A `<stem>.xmp` sidecar derived from the `.cff` joins the bundle once `mix cff.xmp` (RFD 2240) exists. Until then its absence is counted, not skipped.
 
@@ -37,6 +38,14 @@ The cameras are spread evenly around the subject by one fixed rule, so two bundl
 ## Composition (by agreement)
 
 A orbit-view bundle is composed by rendering: a SubViewport, or a fragment shader for the difference column. It is never composed by a per-pixel GDScript loop, and a Godot tool ships as `.sgd` (RFD 2294 "Where compute runs").
+
+## Color chart (checked)
+
+Every still sheet carries the workspace color chart: 24 flat patches in 6 columns and 4 rows, a neutral ramp, the primaries and secondaries at full and three-quarter strength, and six mid-tone colors. `check_orbit_views.py --write-chart chart.png` writes it, and the sRGB values are `CHART` in the checker; `chart.png` in this repository is that output. The chart is drawn flat and unlit through the same output path as the views, so a wrong transfer function, a tonemap on the overlay or a swapped channel shows up as a patch off its value.
+
+The checker reads the region `<stem>.chart.tsv` names, averages the inner half of each patch, and fails any patch more than 2 of 255 off on any channel. A sheet with no chart region fails. A clip's chart is not checked, because the checker does not decode CineForm; that is counted as unchecked for every clip.
+
+The values are ours, chosen for this chart; no third-party chart's published values are used.
 
 ## Citation (checked)
 

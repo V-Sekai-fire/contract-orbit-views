@@ -1,6 +1,6 @@
 The orbit-view standard: one subject seen from cameras spread evenly around it, as a still sheet or a clip.
 
-[`STANDARD.md`](STANDARD.md) states the rules: the bundle, the name, the camera positions, the media formats, the layout, and where an orbit-view bundle goes. `check_orbit_views.py` checks the rules marked checked, and its self-test plants one broken bundle per rule.
+[`STANDARD.md`](STANDARD.md) states the rules: the bundle, the name, the camera positions, the color chart, the media formats, the layout, and where an orbit-view bundle goes. `check_orbit_views.py` checks the rules marked checked, and its self-test plants one broken bundle per rule.
 
     python check_orbit_views.py <dir-or-file>...
     python check_orbit_views.py --self-test
