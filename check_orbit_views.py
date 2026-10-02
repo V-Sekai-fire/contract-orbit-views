@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
-"""Check view sets against STANDARD.md: name, media, .cff and the Hammersley view table.
+"""Check orbit-view bundles against STANDARD.md: name, media, .cff and the camera table.
 
-    python check_views.py <dir-or-file>...
-    python check_views.py --self-test
+    python check_orbit_views.py <dir-or-file>...
+    python check_orbit_views.py --self-test
 """
 import math
 import pathlib
@@ -191,12 +191,12 @@ def main(argv: list) -> int:
         return self_test()
     pngs = bundles(argv)
     if not pngs:
-        print("FAIL no view set found")
+        print("FAIL no orbit-view bundle found")
         return 1
     problems = [p for png in pngs for p in check(png)]
     for p in problems:
         print(f"FAIL {p}")
-    print(f"{len(pngs)} view set(s), {len(problems)} problem(s)")
+    print(f"{len(pngs)} orbit-view bundle(s), {len(problems)} problem(s)")
     return 1 if problems else 0
 
 

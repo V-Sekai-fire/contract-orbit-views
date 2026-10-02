@@ -1,11 +1,11 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "contract-views: the view-set standard and its checker"
+title: "contract-orbit-views: the orbit-view standard and its checker"
 abstract: >
-  What a view set is in the Weftspun workspace: a still sheet (PNG) or a
+  What an orbit-view bundle is in the Weftspun workspace: a still sheet (PNG) or a
   clip (CineForm and FLAC in Matroska), a .cff and a per-view metrics table
   sharing one stem, every camera taken from sphere_hammersley_sequence.
-  check_views.py checks the name, the media, the citation fields and every
+  check_orbit_views.py checks the name, the media, the citation fields and every
   view against the sequence.
 authors:
   - family-names: Lee
@@ -13,9 +13,8 @@ authors:
     email: ernest.lee@chibifire.com
     orcid: "https://orcid.org/0000-0003-4570-1436"
 license: MIT
-repository-code: "https://github.com/V-Sekai-fire/contract-views"
+repository-code: "https://github.com/V-Sekai-fire/contract-orbit-views"
 url: "https://github.com/v-sekai-fire"
 keywords:
-  - view-set
-  - hammersley
+  - orbit-views
   - lookdev
