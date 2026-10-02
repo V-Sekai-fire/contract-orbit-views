@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this chart, cite the source of its values as below."
+type: dataset
+title: "lookdev-24: the workspace's 24-patch color chart"
+abstract: >
+  Our own 6 by 4 layout of 24 flat patches, row-major from top-left, carrying
+  published colorimetric values: the BabelColor Avg. (spectral average of 20
+  charts) sRGB 8-bit, L*a*b* D50 and xyY D50 figures from Pascale (2006),
+  Table 2. chart24.json holds the values and chart24.svg draws them; both are
+  copies of entities-sakuragaoka-station's tools/calib files. The cyan patch's
+  R' = 0 is clipped in sRGB.
+authors:
+  - family-names: Lee
+    given-names: "K. S. Ernest (iFire)"
+    email: ernest.lee@chibifire.com
+    orcid: "https://orcid.org/0000-0003-4570-1436"
+version: "1"
+date-released: 2026-10-01
+commit: 74eb6b1a7827ffcc401265b7ae0eb6af0c30faba
+license: MIT
+repository-code: "https://github.com/V-Sekai-fire/contract-orbit-views"
+url: "https://github.com/v-sekai-fire"
+keywords:
+  - color-chart
+  - colorimetry
+  - calibration
+references:
+  - type: report
+    title: "RGB coordinates of the Macbeth ColorChecker"
+    authors:
+      - family-names: Pascale
+        given-names: Danny
+    publisher:
+      name: "The BabelColor Company"
+    date-published: 2006-06-01
+    url: "https://babelcolor.com/index_htm_files/RGB%20Coordinates%20of%20the%20Macbeth%20ColorChecker.pdf"
+    notes: "Table 2 (8-bit), the BabelColor Avg. block, gives srgb8, lab_d50 and xyY_d50; the manufacturer's 2005 block gives the check_* columns."
+  - type: software
+    title: "entities-sakuragaoka-station: tools/calib/chart24.json and chart24.svg"
+    authors:
+      - name: "V-Sekai-fire"
+    commit: 74eb6b1a7827ffcc401265b7ae0eb6af0c30faba
+    url: "https://github.com/V-Sekai-fire/entities-sakuragaoka-station"
+    notes: "Independent check: chart24-krita-check.json, 24 of 24 patches exact in Krita 5.3.4."

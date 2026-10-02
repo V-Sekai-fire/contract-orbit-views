@@ -41,7 +41,7 @@ A orbit-view bundle is composed by rendering: a SubViewport, or a fragment shade
 
 ## Color chart (checked)
 
-Every still sheet carries lookdev-24, the workspace's 24-patch color chart, the same one `entities-sakuragaoka-station` calibrates with (`tools/calib/chart24.json`, `tools/chart_calib.gd`, station commit 74eb6b1). It is our own 6 by 4 layout carrying published colorimetric values: the BabelColor Avg. sRGB 8-bit and L*a*b* D50 figures from Pascale (2006). `chart24.json` and `chart24.svg` here are copies of the station's, and `check_orbit_views.py --write-chart chart.png` writes the same patches as a PNG.
+Every still sheet carries lookdev-24, the workspace's 24-patch color chart, the same one `entities-sakuragaoka-station` calibrates with (`tools/calib/chart24.json`, `tools/chart_calib.gd`, station commit 74eb6b1). It is our own 6 by 4 layout carrying published colorimetric values: the BabelColor Avg. sRGB 8-bit and L*a*b* D50 figures from Pascale (2006). `chart24.json` and `chart24.svg` here are copies of the station's, cited by `chart24.cff`, and `check_orbit_views.py --write-chart chart.png` writes the same patches as a PNG.
 
 - The chart is drawn flat and unlit through the same output path as the views, so a wrong transfer function, a tonemap on the overlay or a swapped channel moves a patch off its value.
 - The checker reads the region `<stem>.chart.tsv` names, averages the central 60% of each patch, and scores it in CIEDE2000 against the patch's `srgb8` (sRGB 8-bit to linear, to XYZ D65, Bradford to D50, to L*a*b*). A patch over dE00 0.5 fails, the station's unlit gate.
