@@ -1,0 +1,11 @@
+name: check
+on:
+  push:
+  pull_request:
+  merge_group:
+jobs:
+  self-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 check_views.py --self-test
