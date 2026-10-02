@@ -1,21 +1,26 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["OpenEXR==3.5.1", "numpy==2.3.3"]
+# ///
 # SPDX-License-Identifier: MIT
 """Check orbit-view bundles against STANDARD.md: name, media, .cff, the camera table and the color chart.
 
-    python check_orbit_views.py <dir-or-file>...
-    python check_orbit_views.py --self-test
-    python check_orbit_views.py --write-chart chart.png
+    uv run check_orbit_views.py <dir-or-file>...
+    uv run check_orbit_views.py --self-test
+    uv run check_orbit_views.py --write-chart chart.exr
 """
 import json
 import math
 import pathlib
 import re
-import struct
 import sys
 import tempfile
-import zlib
 
-NAME = re.compile(r"^(\d{8})_([a-z0-9-]+)_([a-z0-9-]+)_(\d{4})\.(png|mkv)$")
+import numpy
+import OpenEXR
+
+NAME = re.compile(r"^(\d{8})_([a-z0-9-]+)_([a-z0-9-]+)_(\d{4})\.(exr|mkv)$")
 URL = "https://github.com/v-sekai-fire"
 CFF_KEYS = ("cff-version", "title", "version", "date-released", "commit", "url", "license", "authors")
 TSV_HEADER = ["row", "feature", "forecast", "view", "n", "azimuth_deg", "elevation_deg", "metric", "value"]
@@ -38,13 +43,6 @@ def sphere_hammersley(i: int, n: int) -> tuple:
     return v * 360.0, math.degrees(math.acos(1 - 2 * u) - math.pi / 2)
 
 
-def png_size(path: pathlib.Path) -> tuple:
-    head = path.read_bytes()[:24]
-    if len(head) < 24 or head[:8] != b"\x89PNG\r\n\x1a\n" or head[12:16] != b"IHDR":
-        return (0, 0)
-    return struct.unpack(">II", head[16:24])
-
-
 def chart() -> list:
     """lookdev-24 patches in row-major order: (srgb8, clipped) from chart24.json."""
     data = json.loads(CHART_FILE.read_text())
@@ -53,7 +51,7 @@ def chart() -> list:
 
 
 def lab_d50(rgb8: tuple) -> tuple:
-    lin = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in (v / 255 for v in rgb8)]
+    lin = [srgb_decode(v) for v in rgb8]
     m = ((0.4124564, 0.3575761, 0.1804375), (0.2126729, 0.7151522, 0.0721750), (0.0193339, 0.1191920, 0.9503041))
     b = ((1.0478112, 0.0228866, -0.0501270), (0.0295424, 0.9904844, -0.0170491), (-0.0092345, 0.0150436, 0.7521316))
     mul = lambda a, v: [sum(a[r][k] * v[k] for k in range(3)) for r in range(3)]
@@ -87,46 +85,31 @@ def de2000(l1: tuple, l2: tuple) -> float:
     return math.sqrt((dl / sl) ** 2 + (dc / sc) ** 2 + (dhh / sh) ** 2 + rt * (dc / sc) * (dhh / sh))
 
 
-def png_read(path: pathlib.Path) -> tuple:
-    """Decode an 8-bit, non-interlaced RGB or RGBA PNG to (width, height, rows of RGB tuples)."""
-    data, pos, idat, w = path.read_bytes(), 8, b"", 0
-    while pos < len(data):
-        length, kind = struct.unpack(">I4s", data[pos:pos + 8])
-        body = data[pos + 8:pos + 8 + length]
-        if kind == b"IHDR":
-            w, h, depth, ctype, _, _, interlace = struct.unpack(">IIBBBBB", body)
-            if depth != 8 or ctype not in (2, 6) or interlace:
-                raise ValueError("only 8-bit non-interlaced RGB or RGBA is read")
-            bpp = 3 if ctype == 2 else 4
-        elif kind == b"IDAT":
-            idat += body
-        pos += 12 + length
-    raw, stride, rows, prev = zlib.decompress(idat), w * bpp, [], bytearray(w * bpp)
-    for y in range(h):
-        f, line = raw[y * (stride + 1)], bytearray(raw[y * (stride + 1) + 1:(y + 1) * (stride + 1)])
-        for x in range(stride):
-            a = line[x - bpp] if x >= bpp else 0
-            b, c = prev[x], prev[x - bpp] if x >= bpp else 0
-            if f == 1:
-                line[x] = (line[x] + a) & 255
-            elif f == 2:
-                line[x] = (line[x] + b) & 255
-            elif f == 3:
-                line[x] = (line[x] + (a + b) // 2) & 255
-            elif f == 4:
-                pa, pb, pc = abs(b - c), abs(a - c), abs(a + b - 2 * c)
-                line[x] = (line[x] + (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255
-        rows.append([tuple(line[x * bpp:x * bpp + 3]) for x in range(w)])
-        prev = line
-    return w, h, rows
+def exr_read(path: pathlib.Path) -> tuple:
+    """Read an OpenEXR file with the OpenEXR library to (w, h, rows of linear RGB)."""
+    with OpenEXR.File(str(path)) as f:
+        ch = f.channels()
+        rgb = ch["RGB"].pixels if "RGB" in ch else numpy.stack([ch[c].pixels for c in "RGB"], axis=-1)
+    rgb = numpy.asarray(rgb, dtype=numpy.float64)[..., :3]
+    return rgb.shape[1], rgb.shape[0], rgb.tolist()
 
 
-def png_write(path: pathlib.Path, rows: list) -> None:
-    h, w = len(rows), len(rows[0])
-    raw = b"".join(b"\x00" + bytes(c for px in row for c in px) for row in rows)
-    chunk = lambda t, b: struct.pack(">I", len(b)) + t + b + struct.pack(">I", zlib.crc32(t + b))
-    ihdr = struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0)
-    path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", ihdr) + chunk(b"IDAT", zlib.compress(raw)) + chunk(b"IEND", b""))
+def exr_write(path: pathlib.Path, rows: list) -> None:
+    """Write linear RGB rows as a half-float, ZIP-compressed OpenEXR with the OpenEXR library."""
+    header = {"compression": OpenEXR.ZIP_COMPRESSION, "type": OpenEXR.scanlineimage}
+    rgb = numpy.asarray(rows, dtype=numpy.float16)
+    with OpenEXR.File(header, {"RGB": rgb}) as f:
+        f.write(str(path))
+
+
+def srgb_decode(c8: float) -> float:
+    c = c8 / 255
+    return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+
+
+def srgb_encode(lin: float) -> float:
+    c = max(0.0, min(1.0, lin))
+    return 255 * (12.92 * c if c <= 0.0031308 else 1.055 * c ** (1 / 2.4) - 0.055)
 
 
 def chart_rows(patch: int) -> list:
@@ -144,8 +127,8 @@ def chart_problems(png: pathlib.Path) -> list:
         return [f"{region.name}: not one x y w h row"]
     x0, y0, cw, ch = map(int, lines[1])
     try:
-        w, h, px = png_read(png)
-    except (ValueError, zlib.error, struct.error) as e:
+        w, h, px = exr_read(png)
+    except (ValueError, KeyError, IndexError, RuntimeError, OSError) as e:
         return [f"{png.name}: chart unreadable ({e})"]
     if x0 < 0 or y0 < 0 or x0 + cw > w or y0 + ch > h:
         return [f"{region.name}: chart region lies outside the {w}x{h} image"]
@@ -154,7 +137,7 @@ def chart_problems(png: pathlib.Path) -> list:
         x1, y1 = x0 + (k % CHART_COLS + 0.2) * pw, y0 + (k // CHART_COLS + 0.2) * ph
         cells = [px[y][x] for y in range(int(y1), max(int(y1) + 1, int(y1 + 0.6 * ph)))
                  for x in range(int(x1), max(int(x1) + 1, int(x1 + 0.6 * pw)))]
-        got = tuple(sum(c[i] for c in cells) / len(cells) for i in range(3))
+        got = tuple(srgb_encode(sum(c[i] for c in cells) / len(cells)) for i in range(3))
         de = de2000(lab_d50(want), lab_d50(got))
         if not clipped and de > CHART_UNLIT_MAX_DE00:
             out.append(f"{png.name}: chart patch {k + 1} reads {tuple(round(v) for v in got)}, "
@@ -181,13 +164,11 @@ def check(png: pathlib.Path) -> list:
     out = []
     m = NAME.match(png.name)
     if not m:
-        return [f"{png.name}: name is not YYYYMMDD_project_description_NNNN.png or .mkv"]
+        return [f"{png.name}: name is not YYYYMMDD_project_description_NNNN.exr or .mkv"]
     if png.suffix == ".mkv":
         bad = mkv_problem(png)
         if bad:
             out.append(f"{png.name}: {bad}")
-    elif 0 in png_size(png):
-        out.append(f"{png.name}: not a readable PNG")
     else:
         out += chart_problems(png)
     cff, tsv = png.with_suffix(".cff"), png.with_suffix(".tsv")
@@ -235,7 +216,7 @@ def check(png: pathlib.Path) -> list:
 def bundles(args: list) -> list:
     found = []
     for a in map(pathlib.Path, args):
-        found += sorted(p for p in [*a.glob("*.png"), *a.glob("*.mkv")] if not p.name.startswith("chart")) if a.is_dir() else [a]
+        found += sorted(p for p in [*a.glob("*.exr"), *a.glob("*.mkv")] if not p.name.startswith("chart")) if a.is_dir() else [a]
     return found
 
 
@@ -253,9 +234,8 @@ def write_bundle(d: pathlib.Path, name: str, cff: str, rows: list) -> pathlib.Pa
     rows_px = chart_rows(8)
     if "swapped" in name:
         rows_px = [row[:16] + row[24:32] + row[16:24] + row[32:] if y < 8 else row for y, row in enumerate(rows_px)]
-    if "linear" in name:
-        rows_px = [[tuple(round(255 * (c / 255) ** 2.2) for c in p) for p in row] for row in rows_px]
-    png_write(png, rows_px)
+    to_linear = (lambda c: c / 255) if "linear" in name else srgb_decode
+    exr_write(png, [[tuple(to_linear(c) for c in p) for p in row] for row in rows_px])
     if "nochart" not in name:
         png.with_suffix(".chart.tsv").write_text("x\ty\tw\th\n0\t0\t48\t32\n")
     png.with_suffix(".cff").write_text(cff)
@@ -287,23 +267,23 @@ def hammersley_rows(feature: str, n: int) -> list:
 def self_test() -> int:
     good_rows = hammersley_rows("walking", 8)
     cases = [
-        ("a well-formed bundle passes", "20261002_meshing-pen_joy-walking_0001.png", GOOD_CFF, good_rows, 0),
-        ("a name off the pattern fails", "joy.png", GOOD_CFF, good_rows, 1),
-        ("a .cff with no commit fails", "20261002_meshing-pen_joy-walking_0002.png",
+        ("a well-formed bundle passes", "20261002_meshing-pen_joy-walking_0001.exr", GOOD_CFF, good_rows, 0),
+        ("a name off the pattern fails", "joy.exr", GOOD_CFF, good_rows, 1),
+        ("a .cff with no commit fails", "20261002_meshing-pen_joy-walking_0002.exr",
          GOOD_CFF.replace("commit: 0b5b11e\n", ""), good_rows, 1),
-        ("a .cff naming another url fails", "20261002_meshing-pen_joy-walking_0003.png",
+        ("a .cff naming another url fails", "20261002_meshing-pen_joy-walking_0003.exr",
          GOOD_CFF.replace("https://github.com/v-sekai-fire", "https://example.com"), good_rows, 1),
-        ("a hand-picked azimuth fails", "20261002_meshing-pen_joy-walking_0004.png", GOOD_CFF,
+        ("a hand-picked azimuth fails", "20261002_meshing-pen_joy-walking_0004.exr", GOOD_CFF,
          [r[:5] + ["45.0"] + r[6:] for r in good_rows[:1]] + good_rows[1:], 1),
         ("a CineForm and FLAC clip in Matroska passes", "20261002_meshing-pen_joy-walking_0006.mkv", GOOD_CFF,
          good_rows, 0),
         ("a clip with no FLAC track fails", "20261002_meshing-pen_joy-walking-noflac_0007.mkv", GOOD_CFF,
          good_rows, 1),
-        ("a chart with patches 3 and 4 swapped fails", "20261002_meshing-pen_joy-swapped_0008.png", GOOD_CFF, good_rows, 1),
-        ("a chart written in linear light fails", "20261002_meshing-pen_joy-linear_0009.png", GOOD_CFF,
+        ("a chart with patches 3 and 4 swapped fails", "20261002_meshing-pen_joy-swapped_0008.exr", GOOD_CFF, good_rows, 1),
+        ("a chart left sRGB-encoded in a linear file fails", "20261002_meshing-pen_joy-linear_0009.exr", GOOD_CFF,
          good_rows, 1),
-        ("a sheet with no chart region fails", "20261002_meshing-pen_joy-nochart_0010.png", GOOD_CFF, good_rows, 1),
-        ("a feature with zero rendered views fails", "20261002_meshing-pen_joy-walking_0005.png", GOOD_CFF,
+        ("a sheet with no chart region fails", "20261002_meshing-pen_joy-nochart_0010.exr", GOOD_CFF, good_rows, 1),
+        ("a feature with zero rendered views fails", "20261002_meshing-pen_joy-walking_0005.exr", GOOD_CFF,
          good_rows + [[9, "world-grab", "(likely, p=0.65)", "none", 8, 0, 0, "mad", 0]], 1),
     ]
     failed = 0
@@ -322,7 +302,7 @@ def main(argv: list) -> int:
     if "--self-test" in argv:
         return self_test()
     if argv[:1] == ["--write-chart"] and len(argv) == 2:
-        png_write(pathlib.Path(argv[1]), chart_rows(96))
+        exr_write(pathlib.Path(argv[1]), [[tuple(srgb_decode(c) for c in p) for p in row] for row in chart_rows(96)])
         print(f"wrote {argv[1]}: {CHART_COLS}x{CHART_ROWS} patches of 96 px")
         return 0
     pngs = bundles(argv)

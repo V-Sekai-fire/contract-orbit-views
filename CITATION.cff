@@ -2,7 +2,7 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "contract-orbit-views: the orbit-view standard and its checker"
 abstract: >
-  What an orbit-view bundle is in the Weftspun workspace: a still sheet (PNG) or a
+  What an orbit-view bundle is in the Weftspun workspace: a still sheet (OpenEXR) or a
   clip (CineForm and FLAC in Matroska), a .cff and a per-view metrics table
   sharing one stem, every camera taken from sphere_hammersley_sequence.
   check_orbit_views.py checks the name, the media, the citation fields and every
@@ -34,3 +34,11 @@ references:
     commit: 74eb6b1a7827ffcc401265b7ae0eb6af0c30faba
     url: "https://github.com/V-Sekai-fire/entities-sakuragaoka-station"
     notes: "chart24.json and chart24.svg are copied from tools/calib; the CIEDE2000 gate follows tools/chart_calib.gd."
+  - type: software
+    title: "OpenEXR"
+    authors:
+      - name: "Academy Software Foundation"
+    version: "3.5.1"
+    license: BSD-3-Clause
+    url: "https://github.com/AcademySoftwareFoundation/openexr"
+    notes: "The Python bindings read and write still sheets in check_orbit_views.py."

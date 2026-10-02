@@ -8,7 +8,7 @@ A orbit-view bundle is three files sharing one stem:
 
 | file | holds |
 | --- | --- |
-| `<stem>.png` or `<stem>.mkv` | the still sheet, or the clip |
+| `<stem>.exr` or `<stem>.mkv` | the still sheet, or the clip |
 | `<stem>.cff` | its citation: what it shows, from which commit, under which release |
 | `<stem>.tsv` | one row per cell: the feature, its forecast, the view, and the cell's metric |
 | `<stem>.chart.tsv` | where the color chart sits in a still sheet: one `x y w h` row in pixels |
@@ -17,11 +17,11 @@ A `<stem>.xmp` sidecar derived from the `.cff` joins the bundle once `mix cff.xm
 
 ## Media (checked)
 
-A still sheet is a PNG. A clip is CineForm video with FLAC audio in Matroska (`.mkv`), recorded through `entities-godot-cineform` and delivered without re-encoding (RFD 2294 "Video"); the checker reads the Matroska header and both tracks. No WebM, MJPEG or FFmpeg output is an orbit-view bundle.
+A still sheet is an OpenEXR file holding scene-linear Rec. 709 RGB (half or float, any compression the OpenEXR library reads), so the views keep their dynamic range and the chart is measured in linear light rather than through an 8-bit encoding. The checker reads it with the OpenEXR library (3.5.1, pinned in the script). A PNG made from the EXR for quick viewing is a preview, not part of the bundle, and is not checked. A clip is CineForm video with FLAC audio in Matroska (`.mkv`), recorded through `entities-godot-cineform` and delivered without re-encoding (RFD 2294 "Video"); the checker reads the Matroska header and both tracks. No WebM, MJPEG or FFmpeg output is an orbit-view bundle.
 
 ## Name (checked)
 
-`YYYYMMDD_project_description_NNNN.png` or `.mkv`, lowercase ASCII, underscores between facets and hyphens inside one (RFD 2013). `NNNN` rises and an orbit-view bundle is never overwritten. Example: `20261002_meshing-pen_joy-walking_0001.png`.
+`YYYYMMDD_project_description_NNNN.exr` or `.mkv`, lowercase ASCII, underscores between facets and hyphens inside one (RFD 2013). `NNNN` rises and an orbit-view bundle is never overwritten. Example: `20261002_meshing-pen_joy-walking_0001.exr`.
 
 ## Cameras (checked)
 
@@ -41,10 +41,10 @@ A orbit-view bundle is composed by rendering: a SubViewport, or a fragment shade
 
 ## Color chart (checked)
 
-Every still sheet carries lookdev-24, the workspace's 24-patch color chart, the same one `entities-sakuragaoka-station` calibrates with (`tools/calib/chart24.json`, `tools/chart_calib.gd`, station commit 74eb6b1). It is our own 6 by 4 layout carrying published colorimetric values: the BabelColor Avg. sRGB 8-bit and L*a*b* D50 figures from Pascale (2006). `chart24.json` and `chart24.svg` here are copies of the station's, cited by `chart24.cff`, and `check_orbit_views.py --write-chart chart.png` writes the same patches as a PNG.
+Every still sheet carries lookdev-24, the workspace's 24-patch color chart, the same one `entities-sakuragaoka-station` calibrates with (`tools/calib/chart24.json`, `tools/chart_calib.gd`, station commit 74eb6b1). It is our own 6 by 4 layout carrying published colorimetric values: the BabelColor Avg. sRGB 8-bit and L*a*b* D50 figures from Pascale (2006). `chart24.json` and `chart24.svg` here are copies of the station's, cited by `chart24.cff`, and `check_orbit_views.py --write-chart chart.exr` writes the same patches as a linear OpenEXR file.
 
-- The chart is drawn flat and unlit through the same output path as the views, so a wrong transfer function, a tonemap on the overlay or a swapped channel moves a patch off its value.
-- The checker reads the region `<stem>.chart.tsv` names, averages the central 60% of each patch, and scores it in CIEDE2000 against the patch's `srgb8` (sRGB 8-bit to linear, to XYZ D65, Bradford to D50, to L*a*b*). A patch over dE00 0.5 fails, the station's unlit gate.
+- The chart is drawn flat and unlit through the same output path as the views, so a chart left sRGB-encoded in the linear file, a tonemap on the overlay or a swapped channel moves a patch off its value.
+- The checker reads the region `<stem>.chart.tsv` names, averages the central 60% of each patch in linear light, and scores it in CIEDE2000 against the patch's `srgb8` (sRGB 8-bit to linear, to XYZ D65, Bradford to D50, to L*a*b*). A Godot `Image.save_exr` of the chart (PIZ, half float) passes with all 23 gated patches within dE00 0.5. A patch over dE00 0.5 fails, the station's unlit gate.
 - The cyan patch is clipped in sRGB (R' = 0), so it is not gated, as in the station.
 - A sheet with no chart region fails, and a chart with patches 3 and 4 swapped fails (the station's control).
 - A chart lit in a view's own light (the station's `chart_in_view.json`) is measured and reported per patch, not gated against the unlit values.

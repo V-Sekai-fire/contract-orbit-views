@@ -8,4 +8,5 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - run: python3 check_orbit_views.py --self-test
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run check_orbit_views.py --self-test
