@@ -41,11 +41,14 @@ A orbit-view bundle is composed by rendering: a SubViewport, or a fragment shade
 
 ## Color chart (checked)
 
-Every still sheet carries the workspace color chart: 24 flat patches in 6 columns and 4 rows, a neutral ramp, the primaries and secondaries at full and three-quarter strength, and six mid-tone colors. `check_orbit_views.py --write-chart chart.png` writes it, and the sRGB values are `CHART` in the checker; `chart.png` in this repository is that output. The chart is drawn flat and unlit through the same output path as the views, so a wrong transfer function, a tonemap on the overlay or a swapped channel shows up as a patch off its value.
+Every still sheet carries lookdev-24, the workspace's 24-patch color chart, the same one `entities-sakuragaoka-station` calibrates with (`tools/calib/chart24.json`, `tools/chart_calib.gd`, station commit 74eb6b1). It is our own 6 by 4 layout carrying published colorimetric values: the BabelColor Avg. sRGB 8-bit and L*a*b* D50 figures from Pascale (2006). `chart24.json` and `chart24.svg` here are copies of the station's, and `check_orbit_views.py --write-chart chart.png` writes the same patches as a PNG.
 
-The checker reads the region `<stem>.chart.tsv` names, averages the inner half of each patch, and fails any patch more than 2 of 255 off on any channel. A sheet with no chart region fails. A clip's chart is not checked, because the checker does not decode CineForm; that is counted as unchecked for every clip.
-
-The values are ours, chosen for this chart; no third-party chart's published values are used.
+- The chart is drawn flat and unlit through the same output path as the views, so a wrong transfer function, a tonemap on the overlay or a swapped channel moves a patch off its value.
+- The checker reads the region `<stem>.chart.tsv` names, averages the central 60% of each patch, and scores it in CIEDE2000 against the patch's `srgb8` (sRGB 8-bit to linear, to XYZ D65, Bradford to D50, to L*a*b*). A patch over dE00 0.5 fails, the station's unlit gate.
+- The cyan patch is clipped in sRGB (R' = 0), so it is not gated, as in the station.
+- A sheet with no chart region fails, and a chart with patches 3 and 4 swapped fails (the station's control).
+- A chart lit in a view's own light (the station's `chart_in_view.json`) is measured and reported per patch, not gated against the unlit values.
+- A clip's chart is not checked, because the checker does not decode CineForm; each run counts the clips it left unchecked.
 
 ## Citation (checked)
 

@@ -18,3 +18,19 @@ url: "https://github.com/v-sekai-fire"
 keywords:
   - orbit-views
   - lookdev
+references:
+  - type: report
+    title: "RGB coordinates of the Macbeth ColorChecker"
+    authors:
+      - family-names: Pascale
+        given-names: Danny
+    year: 2006
+    url: "https://babelcolor.com/index_htm_files/RGB%20Coordinates%20of%20the%20Macbeth%20ColorChecker.pdf"
+    notes: "chart24.json carries its BabelColor Avg. sRGB 8-bit and L*a*b* D50 values (Table 2)."
+  - type: software
+    title: "entities-sakuragaoka-station: lookdev-24 chart and calibration"
+    authors:
+      - name: "V-Sekai-fire"
+    commit: 74eb6b1a7827ffcc401265b7ae0eb6af0c30faba
+    url: "https://github.com/V-Sekai-fire/entities-sakuragaoka-station"
+    notes: "chart24.json and chart24.svg are copied from tools/calib; the CIEDE2000 gate follows tools/chart_calib.gd."

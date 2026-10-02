@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="690" height="470" viewBox="0 0 690 470">
+<!-- lookdev-24: our own 24-patch colour chart, values from Pascale 2006 (BabelColor Avg.), see chart24.json -->
+<rect x="0" y="0" width="690" height="470" fill="#1a1a1a"/>
+<rect x="20" y="20" width="100" height="100" fill="#735143"/>
+<rect x="130" y="20" width="100" height="100" fill="#c49581"/>
+<rect x="240" y="20" width="100" height="100" fill="#5d7b9d"/>
+<rect x="350" y="20" width="100" height="100" fill="#5a6c41"/>
+<rect x="460" y="20" width="100" height="100" fill="#8281b0"/>
+<rect x="570" y="20" width="100" height="100" fill="#63bfab"/>
+<rect x="20" y="130" width="100" height="100" fill="#dc7b2d"/>
+<rect x="130" y="130" width="100" height="100" fill="#485ca8"/>
+<rect x="240" y="130" width="100" height="100" fill="#c35462"/>
+<rect x="350" y="130" width="100" height="100" fill="#5b3b69"/>
+<rect x="460" y="130" width="100" height="100" fill="#a0bd3e"/>
+<rect x="570" y="130" width="100" height="100" fill="#e5a129"/>
+<rect x="20" y="240" width="100" height="100" fill="#2b3e93"/>
+<rect x="130" y="240" width="100" height="100" fill="#479548"/>
+<rect x="240" y="240" width="100" height="100" fill="#b03038"/>
+<rect x="350" y="240" width="100" height="100" fill="#eec816"/>
+<rect x="460" y="240" width="100" height="100" fill="#bc5496"/>
+<rect x="570" y="240" width="100" height="100" fill="#0088a6"/>
+<rect x="20" y="350" width="100" height="100" fill="#f5f5f0"/>
+<rect x="130" y="350" width="100" height="100" fill="#c8c9c9"/>
+<rect x="240" y="350" width="100" height="100" fill="#a0a1a1"/>
+<rect x="350" y="350" width="100" height="100" fill="#787979"/>
+<rect x="460" y="350" width="100" height="100" fill="#535455"/>
+<rect x="570" y="350" width="100" height="100" fill="#323232"/>
+</svg>
