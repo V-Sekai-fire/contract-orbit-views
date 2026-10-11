@@ -24,6 +24,17 @@ keywords:
   - color-chart
   - colorimetry
   - calibration
+  - colour-checker
+  - color-checker
+  - ColorChecker
+  - "colour checker plate"
+  - colour-chart
+  - "Macbeth chart"
+  - "Macbeth ColorChecker"
+  - "X-Rite ColorChecker Classic"
+  - "24-patch chart"
+  - "calibration target"
+  - "colour calibration chart"
 references:
   - type: report
     title: "RGB coordinates of the Macbeth ColorChecker"
