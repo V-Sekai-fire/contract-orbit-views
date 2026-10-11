@@ -16,7 +16,8 @@
  },
  "notes": [
   "Our own 6x4 layout carrying published colorimetric values (see source).",
-  "srgb8_clipped marks channels at 0 or 255 (cyan R' = 0 lies outside sRGB); compare such patches by CIEDE2000 against lab_d50, not by sRGB equality."
+  "srgb8_clipped marks channels at 0 or 255 (cyan R' = 0 lies outside sRGB); compare such patches by CIEDE2000 against lab_d50, not by sRGB equality.",
+  "Also known as: colour checker, color checker, ColorChecker-style (Macbeth) chart, 24-patch colour chart, colour calibration chart. It carries the classic ColorChecker's published values as a stand-in for one; it is not an X-Rite product."
  ],
  "patches": [
   {
