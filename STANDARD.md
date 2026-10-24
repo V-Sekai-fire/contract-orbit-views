@@ -13,15 +13,15 @@ A orbit-view bundle is three files sharing one stem:
 | `<stem>.tsv` | one row per cell: the feature, its forecast, the view, and the cell's metric |
 | `<stem>.chart.tsv` | where the color chart sits in a still sheet: one `x y w h` row in pixels |
 
-A `<stem>.xmp` sidecar derived from the `.cff` joins the bundle once `mix cff.xmp` (RFD 2240) exists. Until then its absence is counted, not skipped.
+A `<stem>.xmp` sidecar derived from the `.cff` joins the bundle once `mix cff.xmp` (RFD66606-2240) exists. Until then its absence is counted, not skipped.
 
 ## Media (checked)
 
-A still sheet is an OpenEXR file holding scene-linear Rec. 709 RGB (half or float, any compression the OpenEXR library reads), so the views keep their dynamic range and the chart is measured in linear light rather than through an 8-bit encoding. The checker reads it with the OpenEXR library (3.5.1, pinned in the script). A PNG made from the EXR for quick viewing is a preview, not part of the bundle, and is not checked. A clip is CineForm video with FLAC audio in Matroska (`.mkv`), recorded through `entities-godot-cineform` and delivered without re-encoding (RFD 2294 "Video"); the checker reads the Matroska header and both tracks. No WebM, MJPEG or FFmpeg output is an orbit-view bundle.
+A still sheet is an OpenEXR file holding scene-linear Rec. 709 RGB (half or float, any compression the OpenEXR library reads), so the views keep their dynamic range and the chart is measured in linear light rather than through an 8-bit encoding. The checker reads it with the OpenEXR library (3.5.1, pinned in the script). A PNG made from the EXR for quick viewing is a preview, not part of the bundle, and is not checked. A clip is CineForm video with FLAC audio in Matroska (`.mkv`), recorded through `entities-godot-cineform` and delivered without re-encoding (RFD66606-2294 "Video"); the checker reads the Matroska header and both tracks. No WebM, MJPEG or FFmpeg output is an orbit-view bundle.
 
 ## Name (checked)
 
-`YYYYMMDD_project_description_NNNN.exr` or `.mkv`, lowercase ASCII, underscores between facets and hyphens inside one (RFD 2013). `NNNN` rises and an orbit-view bundle is never overwritten. Example: `20261002_meshing-pen_joy-walking_0001.exr`.
+`YYYYMMDD_project_description_NNNN.exr` or `.mkv`, lowercase ASCII, underscores between facets and hyphens inside one (RFD66606-2013). `NNNN` rises and an orbit-view bundle is never overwritten. Example: `20261002_meshing-pen_joy-walking_0001.exr`.
 
 ## Cameras (checked)
 
@@ -29,15 +29,15 @@ The cameras are spread evenly around the subject by one fixed rule, so two bundl
 
 ## Layout (by agreement)
 
-- A still sheet has one row per case and one column per view; a clip shows the views in index order, each held for the same time. A comparison adds columns: original, port, difference (RFD 2294 "Visual comparisons").
+- A still sheet has one row per case and one column per view; a clip shows the views in index order, each held for the same time. A comparison adds columns: original, port, difference (RFD66606-2294 "Visual comparisons").
 - Failures first, worst first.
 - Each cell is labelled with its metric. The same number is in the `.tsv`.
-- A joy orbit-view bundle's title names the feature and its forecast tag from RFD 2293, for example `walking a faithful station (likely, p=0.70)`.
+- A joy orbit-view bundle's title names the feature and its forecast tag from RFD66606-2293, for example `walking a faithful station (likely, p=0.70)`.
 - The layout precedent is `tools/prop_shots.gd` in `entities-sakuragaoka-station`.
 
 ## Composition (by agreement)
 
-A orbit-view bundle is composed by rendering: a SubViewport, or a fragment shader for the difference column. It is never composed by a per-pixel GDScript loop, and a Godot tool ships as `.sgd` (RFD 2294 "Where compute runs").
+A orbit-view bundle is composed by rendering: a SubViewport, or a fragment shader for the difference column. It is never composed by a per-pixel GDScript loop, and a Godot tool ships as `.sgd` (RFD66606-2294 "Where compute runs").
 
 ## Color chart (checked)
 
@@ -62,4 +62,4 @@ A feature listed in the `.tsv` with `view` set to `none` has no rendered view, a
 
 - In CI, an orbit-view bundle is saved as a workflow artifact (`actions/upload-artifact`).
 - On a release, the bundle is attached to the release and listed in its `SHA256SUMS`.
-- A desk copy goes to `~/Desktop/lookdev-contact-sheets/<topic>-NN.<ext>`, with NN rising (the folder name RFD 2294 gives).
+- A desk copy goes to `~/Desktop/lookdev-contact-sheets/<topic>-NN.<ext>`, with NN rising (the folder name RFD66606-2294 gives).
